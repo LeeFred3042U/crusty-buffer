@@ -1,0 +1,30 @@
+{{define "layout"}}
+<section class="archive-form">
+  <h2>Archive a New Page</h2>
+  <form id="main-archive-form" action="/archive" method="POST">
+    <input type="url" name="url" placeholder="Enter URL to archive..." required>
+    <button type="submit">Archive</button>
+  </form>
+  <div id="loading-indicator" style="display: none;">Archiving... please wait.</div>
+</section>
+
+<section class="archives">
+  <h3>Archived Pages</h3>
+  <div class="archive-list">
+    {{ if not .Archives }}
+      <p class="empty">No archived content yet.</p>
+    {{ else }}
+      {{ range .Archives }}
+        {{ template "partials/archive_card.html" . }}
+      {{ end }}
+    {{ end }}
+  </div>
+</section>
+
+<script>
+    document.getElementById('main-archive-form').addEventListener('submit', function() {
+        document.querySelector('#main-archive-form button').setAttribute('disabled', 'true');
+        document.getElementById('loading-indicator').style.display = 'block';
+    });
+</script>
+{{end}}

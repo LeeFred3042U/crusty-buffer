@@ -1,0 +1,126 @@
+:root {
+  --background: #0f0f0f;
+  --surface: #1a1a1a;
+  --surface-hover: #232323;
+  --text: #eee;
+  --text-muted: #999;
+  --primary: #33cc66;
+  --border: #333;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  max-width: 800px;
+  margin: auto;
+  padding: 1rem 2rem 4rem 2rem;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: .5rem;
+  margin-bottom: 2rem;
+}
+
+header .logo a {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+}
+
+input[type="url"] {
+  padding: .6rem 1rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 4px;
+  width: 70%;
+}
+
+button {
+  padding: .6rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background: var(--primary);
+  color: black;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.archive-form {
+    margin-bottom: 2.5rem;
+}
+
+.archive-card {
+  background: var(--surface);
+  margin: 0.75rem 0;
+  padding: .8rem 1.2rem;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.archive-card:hover {
+  background: var(--surface-hover);
+}
+
+.archive-card .card-title {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+}
+.archive-card .meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0.25rem 0 0 0;
+}
+
+.empty {
+  opacity: 0.7;
+  font-style: italic;
+  padding: 2rem;
+  text-align: center;
+  background: var(--surface);
+  border-radius: 4px;
+}
+
+.flash-message {
+    padding: 1rem;
+    background: #334d3d;
+    border: 1px solid var(--primary);
+    color: var(--text);
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+}
+
+.view-page .metadata {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+.view-page h1 {
+    margin-bottom: 0.5rem;
+}
+.view-page .content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
