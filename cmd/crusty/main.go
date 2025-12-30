@@ -1,46 +1,112 @@
 package main
 
 import (
+	"bufio"
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"crusty-buffer/internal/model"
+	"crusty-buffer/internal/store"
+	"crusty-buffer/internal/worker"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
 
-var logger *zap.Logger
+var (
+	logger     *zap.Logger
+	redisAddr  string
+	badgerPath string
+)
 
-// rootCmd represents the base command when called without any subcommands
-// Usage: crusty
 var rootCmd = &cobra.Command{
 	Use:   "crusty",
-	Short: "Crusty Buffer - A self-hosted read-it-later tool",
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
-	},
+	Short: "crusty-buffer - A self-hosted read-it-later tool",
 }
 
-// serverCmd represents the command to start the web server
-// Usage: crusty server
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Start the web server",
+	Short: "Start the worker and web server",
 	Run: func(cmd *cobra.Command, args []string) {
-		logger.Info("Server starting...")
-		logger.Warn("Handler logic missing - waiting for implementation")
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		// Setup Signal Handling (Ctrl+C)
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+		// Setup Manual 'q' input handling
+		go func() {
+			scanner := bufio.NewScanner(os.Stdin)
+			for scanner.Scan() {
+				if scanner.Text() == "q" {
+					fmt.Println(" 'q' pressed. Stopping...")
+					cancel()
+					return
+				}
+			}
+		}()
+
+		// Handle shutdown signals
+		go func() {
+			<-sigChan
+			logger.Info("Shutting down...")
+			cancel()
+		}()
+
+		// Initialize Store (FULL MODE - Redis + Badger)
+		st, err := store.NewHybridStore(redisAddr, badgerPath)
+		if err != nil {
+			logger.Fatal("Failed to init store", zap.Error(err))
+		}
+		defer st.Close()
+
+		// Start Worker
+		w := worker.NewWorker(st, logger)
+		go w.Start(ctx)
+
+		logger.Info("Server running.")
+		fmt.Println("Press 'q' + Enter or Ctrl+C to stop.")
+		
+		// Block until shutdown
+		<-ctx.Done()
+		
+		time.Sleep(1 * time.Second)
+		logger.Info("Goodbye!")
 	},
 }
 
-// addCmd represents the command to add a URL for archiving
-// Usage: crusty add [url]
 var addCmd = &cobra.Command{
 	Use:   "add [url]",
 	Short: "Archive a URL immediately",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		url := args[0]
-		logger.Info("Queueing URL for archive", zap.String("url", url))
-		logger.Warn("Worker logic missing - waiting for implementation")
+		
+		// Initialize Store (CLIENT MODE - Redis Only)
+		// Passing "" as the second argument ensures we don't try to open the BadgerDB file lock.
+		st, err := store.NewHybridStore(redisAddr, "") 
+		if err != nil {
+			logger.Fatal("Failed to init store", zap.Error(err))
+		}
+		defer st.Close()
+
+		// Create Article
+		article := model.NewArticle(url)
+
+		// Save (Pushes to Redis Queue, ignores Badger because content is empty)
+		ctx := context.Background()
+		if err := st.Save(ctx, &article); err != nil {
+			logger.Fatal("Failed to save article", zap.Error(err))
+		}
+
+		logger.Info("Article queued", 
+			zap.String("id", article.ID.String()), 
+			zap.String("url", url))
 	},
 }
 
@@ -51,6 +117,9 @@ func main() {
 		panic(err)
 	}
 	defer logger.Sync()
+
+	rootCmd.PersistentFlags().StringVar(&redisAddr, "redis", "localhost:6379", "Address of Redis server")
+	rootCmd.PersistentFlags().StringVar(&badgerPath, "badger", "./badger-data", "Path to BadgerDB data directory")
 
 	rootCmd.AddCommand(serverCmd)
 	rootCmd.AddCommand(addCmd)

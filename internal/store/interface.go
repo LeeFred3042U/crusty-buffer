@@ -17,4 +17,5 @@ type Store interface {
 	Get(ctx context.Context, id uuid.UUID) (*model.Article, error)
 	List(ctx context.Context, limit int) ([]model.Article, error)
 	UpdateStatus(ctx context.Context, id uuid.UUID, status model.ArticleStatus) error
+	PopQueue(ctx context.Context) (uuid.UUID, error)
 }
