@@ -6,7 +6,7 @@ An **Article** is the atomic unit of truth in this system. Everything else exist
 
 ---
 
-## 1. The User’s View
+## The User’s View
 
 To the user, an **Article** is a **frozen webpage**, not a bookmark.
 
@@ -22,7 +22,7 @@ To the user, an **Article** is a **frozen webpage**, not a bookmark.
 
 ---
 
-## 2. for the one reading this repo
+## for the one reading this repo
 
 To someone reading the codebase, the `Article` struct in `internal/model/article.go` is the **core domain entity**. Not a DTO. Not a helper. The spine of the system.
 
@@ -40,7 +40,7 @@ To someone reading the codebase, the `Article` struct in `internal/model/article
 
 ---
 
-## 3. Developer View
+## for me
 
 The Article is a **dangerous payload** moving across layers that have very different tolerance for size and stupidity.
 
@@ -67,7 +67,7 @@ The Article is a **dangerous payload** moving across layers that have very diffe
 
 ---
 
-## Mental Model
+## work-flow-part >_<
 
 ```text
         USER sees:             REPO VIEWER sees:           WE see:
@@ -79,11 +79,9 @@ The Article is a **dangerous payload** moving across layers that have very diffe
    - Offline forever          - UUID identity           - Split storage
    - No ads                   - State machine           - Redis vs Badger
    - Immutable                - Async workflow          - Serialization traps
-```
----
 
-### work-flowchart
-```text
+------------------------------------------------------------------------------------
+
      [ PRODUCER ]                     [ QUEUE ]                    [ CONSUMER ]
    (The CLI Command)                (Redis List)                   (The Worker)
 
@@ -103,6 +101,24 @@ The Article is a **dangerous payload** moving across layers that have very diffe
     | "Title: ..." |           (Update Status: ARCHIVED)       | "<html>...</html>|
     | "Status: ..."|                                           +------------------+
     +--------------+
+
+------------------------------------------------------------------------------------------
+[ Browser ]
+           |
+      GET /view/...
+           |
+           v
+    +-------------+       +--------------+
+    | WEB SERVER  | <---> | WORKER       |
+    | (Gorilla)   |       | (Background) |
+    +------+------+       +------+-------+
+           |                     |
+           +----------+----------+
+                      |
+               [ HYBRID STORE ]
+
+
+
 ```
 --- 
 
